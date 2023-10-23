@@ -1,0 +1,2610 @@
+openapi: 3.0.3
+info:
+  title: DevNest Portal API (OpenAPI 3.0)
+  description: The DevNest Portal API endpoints definitions based on the OpenAPI 3.0
+    specification.
+  termsOfService: https://devnest.ro/terms-and-conditions
+  contact:
+    email: contact@devnest.ro
+  version: 1.0.0
+externalDocs:
+  description: DevNest
+  url: https://devnest.ro
+servers:
+- url: https://me.devnest.ro/api/v1
+tags:
+- name: Timesheets
+  description: Timesheets
+- name: Projects
+  description: Projects
+- name: Employees
+  description: Employees
+- name: Allocations
+  description: Allocations
+- name: Feedback
+  description: Feedback
+- name: Settings
+  description: Settings
+paths:
+  /timesheets:
+    get:
+      tags:
+      - Timesheets
+      summary: Returns all timesheets
+      description: Returns all timesheets
+      operationId: getAllTimesheets
+      parameters:
+      - name: projectName
+        in: query
+        description: return all timesheets by projectName
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: limit
+        in: query
+        description: number of timesheets to return
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: number
+          format: int
+          default: 5
+      - name: date
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Returns an array of timesheets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreatedTimesheet'
+                x-content-type: application/json
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /timesheets/{timesheetId}:
+    get:
+      tags:
+      - Timesheets
+      summary: Returns timesheet by timesheetId
+      description: Return timesheet by timesheetId
+      operationId: getTimesheetById
+      parameters:
+      - name: timesheetId
+        in: path
+        description: return timesheet by timesheetId
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      responses:
+        "200":
+          description: returns timesheet by timesheetId
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedTimesheet'
+        "404":
+          description: The specified resource was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+      - Timesheets
+      summary: Update an timesheet
+      description: Update an timesheet
+      parameters:
+      - name: timesheetId
+        in: path
+        description: ID of the timesheet
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      requestBody:
+        description: Timesheet data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Timesheet'
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Timesheet'
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: The specified resource was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /timesheets/project-status/{projectId}:
+    get:
+      tags:
+      - Timesheets
+      summary: Returns project-status from timesheet by projectId
+      description: Returns project-status from timesheet by projectId
+      operationId: getProjectStatusByProjectId
+      parameters:
+      - name: projectId
+        in: path
+        description: Id of the project
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      responses:
+        "200":
+          description: returns projectStatus from timesheet by projectId
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedProjectStatus'
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: The specified resource was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /timesheets/project-status/{projectId}/{year}/{month}:
+    get:
+      tags:
+      - Timesheets
+      summary: Get the status of a project's timesheets for a specific year and month.
+      description: Retrieve the status of a project's timesheets for a specific year
+        and month.
+      parameters:
+      - name: projectId
+        in: path
+        description: Id of the project
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      - name: year
+        in: path
+        description: The year to retrieve timesheet statuses
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      - name: month
+        in: path
+        description: The month to retrieve timesheet statuses
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Timesheet statuses for the specified project and month
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/inline_response_200'
+                x-content-type: application/json
+        "404":
+          description: The specified project or month does not exist
+      security:
+      - devnest_auth:
+        - read:timesheets
+  /monthlyTimesheet/{employeeId}:
+    put:
+      tags:
+      - Timesheets
+      summary: Update Timesheet
+      description: Updates the timesheet for the specified employee.
+      parameters:
+      - name: employeeId
+        in: path
+        description: Id of the employee
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      requestBody:
+        description: Data to update the timesheet
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatedTimesheet'
+        required: true
+      responses:
+        "200":
+          description: Returns updated timesheet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdatedTimesheet'
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: The specified resource was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /projects:
+    get:
+      tags:
+      - Projects
+      summary: Get all projects
+      description: Returns an array of all project objects like in /responseBodies/Project.
+      operationId: getAllProjects
+      responses:
+        "200":
+          description: Returns an array of projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreatedProject'
+                x-content-type: application/json
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      tags:
+      - Projects
+      summary: Create a new project
+      description: "Adds a new project having all the submitted properties. It will\
+        \ return the newly created project, having the id besides the submitted properties."
+      operationId: createProject
+      requestBody:
+        description: Data to create a new project
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewProject'
+        required: true
+      responses:
+        "201":
+          description: Returns the created project data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedProject'
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /projects/{projectId}:
+    get:
+      tags:
+      - Projects
+      summary: Returns the project by projectId
+      description: Returns a project like in /responsesBodies/Project by projectId.
+      parameters:
+      - name: projectId
+        in: path
+        description: Id of the project
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      responses:
+        "200":
+          description: Returns the Project by projectId
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedProject'
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: The specified resource was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+      - Projects
+      summary: Returns updated project by projectId
+      description: Return a project like in /responsesBodies/Project by projectId
+        by submitting a JSON file in request body like in /responsesBodies/Project.
+      parameters:
+      - name: projectId
+        in: path
+        description: Id of the project
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      requestBody:
+        description: Data to update the project by projectId
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatedProject'
+        required: true
+      responses:
+        "200":
+          description: Returns updated project by projectId
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedProject'
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: The specified resource was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+      - Projects
+      summary: Delete a project by id
+      description: Delete the project by projectId.
+      parameters:
+      - name: projectId
+        in: path
+        description: Id of the project
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      responses:
+        "204":
+          description: The resource was deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: The specified resource was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      tags:
+      - Projects
+      summary: Update the 'status' parameter based on whether the project is archived
+        or not.
+      description: Update the 'status' parameter based on whether the project is archived
+        or not.
+      parameters:
+      - name: projectId
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/projects_projectId_body'
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/projects_projectId_body'
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: The specified resource was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /projects/{projectId}/allocations:
+    get:
+      tags:
+      - Allocations
+      summary: Get all allocations by projectId
+      description: "This endpoint with GET method, return an array of all allocation\
+        \ objects like in /responseBodies/Allocation by projectId with 200 Succsefully\
+        \ status or 5xx status if it's necessary"
+      operationId: getAllAllocationsById
+      parameters:
+      - name: projectId
+        in: path
+        description: ID of the project
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      responses:
+        "200":
+          description: Returns an array of allocations by projectId
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreatedAllocation'
+                x-content-type: application/json
+    put:
+      tags:
+      - Allocations
+      summary: Update allocations
+      description: "This endpoint with PUT method, update allocations by submitting\
+        \ a JSON file in request body.This file should include an array of data about\
+        \ allocation like in /requestBodies/Allocation. IMPORTANT, if one of allocations\
+        \ is invalid, then none of allocations will be updated."
+      operationId: updateAllocations
+      parameters:
+      - name: projectId
+        in: path
+        description: Id of the project for every allocation
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      requestBody:
+        description: Array of data to update allocations
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/CreatedAllocation'
+        required: true
+      responses:
+        "200":
+          description: Returns an array of allocations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreatedAllocation'
+                x-content-type: application/json
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: The specified resource was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "409":
+          description: The specified resource has a conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      tags:
+      - Allocations
+      summary: Create new allocations
+      description: "This endpoint with POST method, create new allocations by submitting\
+        \ a JSON file in request body.This file should include an array of data about\
+        \ allocation like in /requestBodies/Allocation.Upon successful creation of\
+        \ all allocations, the endpoint will return a 201 Created status code along\
+        \ with the array of newly created allocations object in the response body\
+        \ like in /responseBodies/Allocation. There can be errors like validation(400\
+        \ Bad request), not found project by projectId(404 Not found) or server error(5xx).\
+        \ IMPORTANT, if one of allocations is invalid, then none of allocations will\
+        \ be created."
+      operationId: createAllocations
+      parameters:
+      - name: projectId
+        in: path
+        description: Id of the project for every allocation
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      requestBody:
+        description: Array of data to create new allocations
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/NewAllocationForProject'
+        required: true
+      responses:
+        "200":
+          description: Returns an array of allocations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreatedAllocation'
+                x-content-type: application/json
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: The specified resource was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "409":
+          description: The specified resource has a conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /projects/{projectId}/allocations/{employeeId}:
+    put:
+      tags:
+      - Allocations
+      summary: Update allocation by projectId and employeeId
+      description: "This endpoint with PUT method, update allocations by submitting\
+        \ a JSON file in request body.This file should a data about allocation like\
+        \ in /schemas/CreatedAllocation."
+      operationId: updateAllocation
+      parameters:
+      - name: projectId
+        in: path
+        description: Id of the project for allocation
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      - name: employeeId
+        in: path
+        description: Id of the employee for allocation
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      requestBody:
+        description: data to update allocation
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatedAllocation'
+        required: true
+      responses:
+        "200":
+          description: Returns an allocation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedAllocation'
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: The specified resource was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /projects/{projectId}/allocations/{allocationId}:
+    delete:
+      tags:
+      - Allocations
+      summary: Delete allocation by allocationId from project by projectId
+      description: "DELETE method will delete allocation by allocationId and projectId\
+        \ and will return 200 Succsefully status if was deleted, or error responses\
+        \ (400(for invalid allocationId or projectId), 404(not found allocation by\
+        \ allocationId and projectId), 5xx(server error))"
+      parameters:
+      - name: projectId
+        in: path
+        description: Id of the project
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      - name: allocationId
+        in: path
+        description: Id of the allocation
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      responses:
+        "204":
+          description: The resource was deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: The specified resource was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /projects/{projectId}/history:
+    get:
+      tags:
+      - Projects
+      summary: Get history for a project
+      description: Get history for a project
+      operationId: getHistoryForProject
+      parameters:
+      - name: projectId
+        in: path
+        description: ID of the project
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/History'
+                x-content-type: application/json
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: The specified resource was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - devnest_auth:
+        - read:history
+  /employees:
+    get:
+      tags:
+      - Employees
+      summary: Get all employees
+      description: Get all employees
+      operationId: getAllEmployees
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Employee'
+                x-content-type: application/json
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - devnest_auth:
+        - read:employees
+    post:
+      tags:
+      - Employees
+      summary: Create a new employee in the database
+      description: Create a new employee in the database
+      requestBody:
+        description: Employee data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewEmployee'
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - devnest_auth:
+        - write:employees
+  /employees/{employeeId}:
+    get:
+      tags:
+      - Employees
+      summary: Get employee by Id
+      description: Get employee by Id
+      operationId: getEmployeeById
+      parameters:
+      - name: employeeId
+        in: path
+        description: ID of the employee
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+        "404":
+          description: The specified resource was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - devnest_auth:
+        - read:employees
+    put:
+      tags:
+      - Employees
+      summary: Update an employee
+      description: Update an employee
+      parameters:
+      - name: employeeId
+        in: path
+        description: ID of the employee
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      requestBody:
+        description: Employee data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Employee'
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: The specified resource was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - devnest_auth:
+        - write:employees
+    delete:
+      tags:
+      - Employees
+      summary: Deletes an existing employee
+      description: Delete an existing employee by id
+      operationId: deleteEmployeeById
+      parameters:
+      - name: employeeId
+        in: path
+        description: ID of the employee
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      responses:
+        "204":
+          description: The resource was deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: The specified resource was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - devnest_auth:
+        - write:employees
+    patch:
+      tags:
+      - Employees
+      summary: Update the 'status' parameter based on whether the employee is archived
+        or not.
+      description: Update the 'status' parameter based on whether the employee is
+        archived or not.
+      parameters:
+      - name: employeeId
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/employees_employeeId_body'
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/employees_employeeId_body'
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: The specified resource was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - devnest_auth:
+        - write:employees
+  /employees/{employeeId}/password:
+    put:
+      tags:
+      - Employees
+      summary: Update employee password
+      description: Update the password for a specific employee
+      parameters:
+      - name: employeeId
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      requestBody:
+        description: Employee's new password
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatedEmployeePassword'
+      responses:
+        "200":
+          description: Password updated successfully
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: The specified resource was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - devnest_auth:
+        - write:employees
+  /employees/{employeeId}/history:
+    get:
+      tags:
+      - Employees
+      summary: Get history for an employee
+      description: Get history for an employee
+      operationId: getHistoryForEmployee
+      parameters:
+      - name: employeeId
+        in: path
+        description: ID of the employee
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/History'
+                x-content-type: application/json
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: The specified resource was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - devnest_auth:
+        - read:history
+  /employees/{employeeId}/allocations:
+    get:
+      tags:
+      - Allocations
+      summary: Get allocations for an employee
+      description: Get allocations for an employee
+      operationId: getAllocationsForEmployee
+      parameters:
+      - name: employeeId
+        in: path
+        description: ID of the employee
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreatedAllocation'
+                x-content-type: application/json
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: The specified resource was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - devnest_auth:
+        - read:allocations
+    post:
+      tags:
+      - Allocations
+      summary: Create a new allocation for an employee
+      description: Create a new allocation for an employee
+      operationId: createAllocationForEmployee
+      parameters:
+      - name: employeeId
+        in: path
+        description: ID of the employee
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      requestBody:
+        description: Allocation data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewAllocationForEmployee'
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedAllocation'
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - devnest_auth:
+        - write:allocations
+  /employees/{employeeId}/allocations/{allocationId}:
+    get:
+      tags:
+      - Allocations
+      summary: Get an allocation for a specific employee
+      description: Get an allocation for a specific employee
+      operationId: getAllocationForEmployee
+      parameters:
+      - name: employeeId
+        in: path
+        description: ID of the employee
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      - name: allocationId
+        in: path
+        description: ID of the allocation
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreatedAllocation'
+                x-content-type: application/json
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: The specified resource was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - devnest_auth:
+        - read:allocations
+    put:
+      tags:
+      - Allocations
+      summary: Update an allocation for a specific employee
+      description: Update an allocation for a specific employee
+      operationId: updateAllocationForEmployee
+      parameters:
+      - name: employeeId
+        in: path
+        description: ID of the employee
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      - name: allocationId
+        in: path
+        description: ID of the allocation
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      requestBody:
+        description: Allocation data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatedAllocation'
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreatedAllocation'
+                x-content-type: application/json
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: The specified resource was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - devnest_auth:
+        - write:allocations
+    delete:
+      tags:
+      - Allocations
+      summary: Delete an allocation for a specific employee
+      description: Delete an allocation for a specific employee
+      operationId: deleteAllocationForEmployee
+      parameters:
+      - name: employeeId
+        in: path
+        description: ID of the employee
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      - name: allocationId
+        in: path
+        description: ID of the allocation
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      responses:
+        "204":
+          description: The resource was deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: The specified resource was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - devnest_auth:
+        - write:allocations
+  /feedback:
+    get:
+      tags:
+      - Feedback
+      summary: Get all feedback
+      description: Get all feedback
+      operationId: getAllFeedback
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EmployeeFeedback'
+                x-content-type: application/json
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - devnest_auth:
+        - read:feedback
+  /feedback/{employeeId}:
+    get:
+      tags:
+      - Feedback
+      summary: Get overall feedback for an employee
+      description: Get overall feedback for an employee
+      operationId: getEmployeeOverallFeedback
+      parameters:
+      - name: employeeId
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedEmployeeFeedback'
+        "404":
+          description: The specified resource was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - devnest_auth:
+        - read:feedback
+  /feedback/{employeeId}/month:
+    get:
+      tags:
+      - Feedback
+      summary: Get all monthly feedback for an employee
+      description: Get all monthly feedback for an employee
+      operationId: getEmployeeMonthlyFeedback
+      parameters:
+      - name: employeeId
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MonthlyFeedback'
+                x-content-type: application/json
+        "404":
+          description: The specified resource was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - devnest_auth:
+        - read:feedback
+    post:
+      tags:
+      - Feedback
+      summary: Create feedback for a specific employee in a specific month
+      description: Create feedback for a specific employee in a specific month
+      parameters:
+      - name: employeeId
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MonthlyFeedback'
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonthlyFeedback'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - devnest_auth:
+        - write:feedback
+  /feedback/{employeeId}/month/{feedbackId}:
+    get:
+      tags:
+      - Feedback
+      summary: Return one feedback for an employee
+      description: Return one feedback for an employee for a given month
+      operationId: getEmployeeFeedback
+      parameters:
+      - name: employeeId
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      - name: feedbackId
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+          format: int
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Feedback'
+                x-content-type: application/json
+        "404":
+          description: The specified resource was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - devnest_auth:
+        - read:feedback
+  /archives/employees:
+    get:
+      tags:
+      - Archives
+      summary: Get all archived employees
+      description: Get all archived employees
+      operationId: getAllArchivedEmployees
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Employee'
+                x-content-type: application/json
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - devnest_auth:
+        - read:archives
+  /archives/projects:
+    get:
+      tags:
+      - Archives
+      summary: Get all archived projects
+      description: Get all archived projects
+      operationId: getAllArchivedProjects
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreatedProject'
+                x-content-type: application/json
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - devnest_auth:
+        - read:archives
+  /settings:
+    get:
+      tags:
+      - Settings
+      summary: Get all settings
+      description: Get all settings
+      operationId: getAllSettings
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Settings'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - devnest_auth:
+        - read:settings
+    put:
+      tags:
+      - Settings
+      summary: Update settings
+      description: Update settings
+      operationId: updateSettings
+      requestBody:
+        description: Settings data to update
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Settings'
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Settings'
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - devnest_auth:
+        - write:settings
+components:
+  schemas:
+    Timesheet:
+      type: object
+      properties:
+        id:
+          type: number
+          format: int
+        day1:
+          type: number
+          format: int
+        day2:
+          type: number
+          format: int
+        day3:
+          type: number
+          format: int
+        day4:
+          type: number
+          format: int
+        day5:
+          type: number
+          format: int
+        day6:
+          type: number
+          format: int
+        day7:
+          type: number
+          format: int
+        day8:
+          type: number
+          format: int
+        day9:
+          type: number
+          format: int
+        day10:
+          type: number
+          format: int
+        day11:
+          type: number
+          format: int
+        day12:
+          type: number
+          format: int
+        day13:
+          type: number
+          format: int
+        day14:
+          type: number
+          format: int
+        day15:
+          type: number
+          format: int
+        day16:
+          type: number
+          format: int
+        day17:
+          type: number
+          format: int
+        day18:
+          type: number
+          format: int
+        day19:
+          type: number
+          format: int
+        day20:
+          type: number
+          format: int
+        day21:
+          type: number
+          format: int
+        day22:
+          type: number
+          format: int
+        day23:
+          type: number
+          format: int
+        day24:
+          type: number
+          format: int
+        day25:
+          type: number
+          format: int
+        day26:
+          type: number
+          format: int
+        day27:
+          type: number
+          format: int
+        day28:
+          type: number
+          format: int
+        day29:
+          type: number
+          format: int
+        day30:
+          type: number
+          format: int
+        day31:
+          type: number
+          format: int
+      example:
+        day29: 2.884162126668780246063761296682059764862060546875
+        day28: 1.2846590061165319429647979632136411964893341064453125
+        day27: 6.96511769763884558415156789124011993408203125
+        day26: 3.557195227068097320710649000830017030239105224609375
+        day14: 1.489415909854170383397331534069962799549102783203125
+        day13: 1.024645700144157789424070870154537260532379150390625
+        day12: 1.231513536777255612975068288506008684635162353515625
+        day11: 7.3862819483858839220147274318151175975799560546875
+        day10: 4.1456080298839363962315474054776132106781005859375
+        day31: 6.87805222012787620400331434211693704128265380859375
+        day30: 6.77832496304801335185175048536621034145355224609375
+        id: 0.80082819046101150206595775671303272247314453125
+        day19: 5.02500479152029466689555192715488374233245849609375
+        day18: 4.9652184929849543237878606305457651615142822265625
+        day17: 1.173074250955943309548956676735542714595794677734375
+        day16: 7.4577447736837658709418974467553198337554931640625
+        day15: 6.8468526983526398765889098285697400569915771484375
+        day25: 6.438423552598546706349225132726132869720458984375
+        day24: 9.0183481860707832566959041287191212177276611328125
+        day8: 3.61607674925191080461672754609026014804840087890625
+        day23: 8.7620420127490010742121739895083010196685791015625
+        day9: 2.027123023002321833274663731572218239307403564453125
+        day22: 6.683562403749608193948006373830139636993408203125
+        day6: 7.061401241503109105224211816675961017608642578125
+        day21: 9.3693102714106686335071572102606296539306640625
+        day7: 9.301444243932575517419536481611430644989013671875
+        day20: 9.965781217890562260208753286860883235931396484375
+        day4: 5.63737665663332876420099637471139430999755859375
+        day5: 2.3021358869347654518833223846741020679473876953125
+        day2: 1.46581298050294517310021547018550336360931396484375
+        day3: 5.962133916683182377482808078639209270477294921875
+        day1: 6.02745618307040320615897144307382404804229736328125
+    UpdatedTimesheet:
+      type: object
+      properties:
+        id:
+          type: number
+          format: int
+        projectId:
+          type: number
+          format: int
+        employeeId:
+          type: number
+          format: int
+        day1:
+          type: number
+          format: int
+        day2:
+          type: number
+          format: int
+        day3:
+          type: number
+          format: int
+        day4:
+          type: number
+          format: int
+        day5:
+          type: number
+          format: int
+        day6:
+          type: number
+          format: int
+        day7:
+          type: number
+          format: int
+        day8:
+          type: number
+          format: int
+        day9:
+          type: number
+          format: int
+        day10:
+          type: number
+          format: int
+        day11:
+          type: number
+          format: int
+        day12:
+          type: number
+          format: int
+        day13:
+          type: number
+          format: int
+        day14:
+          type: number
+          format: int
+        day15:
+          type: number
+          format: int
+        day16:
+          type: number
+          format: int
+        day17:
+          type: number
+          format: int
+        day18:
+          type: number
+          format: int
+        day19:
+          type: number
+          format: int
+        day20:
+          type: number
+          format: int
+        day21:
+          type: number
+          format: int
+        day22:
+          type: number
+          format: int
+        day23:
+          type: number
+          format: int
+        day24:
+          type: number
+          format: int
+        day25:
+          type: number
+          format: int
+        day26:
+          type: number
+          format: int
+        day27:
+          type: number
+          format: int
+        day28:
+          type: number
+          format: int
+        day29:
+          type: number
+          format: int
+        day30:
+          type: number
+          format: int
+        day31:
+          type: number
+          format: int
+      example:
+        day29: 6.87805222012787620400331434211693704128265380859375
+        day28: 6.77832496304801335185175048536621034145355224609375
+        day27: 2.884162126668780246063761296682059764862060546875
+        day26: 1.2846590061165319429647979632136411964893341064453125
+        day14: 7.4577447736837658709418974467553198337554931640625
+        day13: 6.8468526983526398765889098285697400569915771484375
+        day12: 1.489415909854170383397331534069962799549102783203125
+        day11: 1.024645700144157789424070870154537260532379150390625
+        day10: 1.231513536777255612975068288506008684635162353515625
+        day31: 6.70401929795003592715829654480330646038055419921875
+        day30: 5.94489560761401580890606055618263781070709228515625
+        id: 0.80082819046101150206595775671303272247314453125
+        employeeId: 1.46581298050294517310021547018550336360931396484375
+        day19: 9.3693102714106686335071572102606296539306640625
+        day18: 9.965781217890562260208753286860883235931396484375
+        day17: 5.02500479152029466689555192715488374233245849609375
+        day16: 4.9652184929849543237878606305457651615142822265625
+        day15: 1.173074250955943309548956676735542714595794677734375
+        day25: 6.96511769763884558415156789124011993408203125
+        day24: 3.557195227068097320710649000830017030239105224609375
+        day8: 4.1456080298839363962315474054776132106781005859375
+        day23: 6.438423552598546706349225132726132869720458984375
+        day9: 7.3862819483858839220147274318151175975799560546875
+        day22: 9.0183481860707832566959041287191212177276611328125
+        day6: 3.61607674925191080461672754609026014804840087890625
+        day21: 8.7620420127490010742121739895083010196685791015625
+        day7: 2.027123023002321833274663731572218239307403564453125
+        day20: 6.683562403749608193948006373830139636993408203125
+        day4: 7.061401241503109105224211816675961017608642578125
+        day5: 9.301444243932575517419536481611430644989013671875
+        day2: 5.63737665663332876420099637471139430999755859375
+        day3: 2.3021358869347654518833223846741020679473876953125
+        day1: 5.962133916683182377482808078639209270477294921875
+        projectId: 6.02745618307040320615897144307382404804229736328125
+    CreatedTimesheet:
+      required:
+      - date
+      - id
+      - projectId
+      - status
+      type: object
+      properties:
+        id:
+          type: number
+          format: int
+        status:
+          type: string
+          default: unsubmitted
+          enum:
+          - submitted
+          - unsubmitted
+        date:
+          type: string
+          format: date
+        projectId:
+          type: number
+          format: int
+        file:
+          type: string
+          format: binary
+      example:
+        date: 2000-01-23
+        file: ""
+        id: 0.80082819046101150206595775671303272247314453125
+        projectId: 6.02745618307040320615897144307382404804229736328125
+        status: unsubmitted
+    CreatedProjectStatus:
+      required:
+      - employeeId
+      - extraHours
+      - id
+      - totalHours
+      type: object
+      properties:
+        id:
+          type: number
+          format: int
+        projectId:
+          type: number
+          format: int
+        employeeId:
+          type: number
+          format: int
+        totalHours:
+          type: number
+          format: int
+        extraHours:
+          type: number
+          format: int
+        rateType:
+          type: string
+          enum:
+          - HOUR
+          - MONTH
+        rateValue:
+          type: number
+          format: int
+      example:
+        rateValue: 2.3021358869347654518833223846741020679473876953125
+        rateType: HOUR
+        extraHours: 5.63737665663332876420099637471139430999755859375
+        totalHours: 5.962133916683182377482808078639209270477294921875
+        employeeId: 1.46581298050294517310021547018550336360931396484375
+        id: 0.80082819046101150206595775671303272247314453125
+        projectId: 6.02745618307040320615897144307382404804229736328125
+    NewProject:
+      required:
+      - clientName
+      - currency
+      - name
+      - startingDate
+      type: object
+      properties:
+        name:
+          type: string
+        clientName:
+          type: string
+        description:
+          type: string
+        startingDate:
+          type: string
+          format: date-time
+        endingDate:
+          type: string
+          format: date-time
+        currency:
+          type: string
+          enum:
+          - RON
+          - EUR
+          - USD
+        status:
+          type: boolean
+    CreatedProject:
+      type: object
+      properties:
+        id:
+          type: number
+          format: int
+        name:
+          type: string
+        clientName:
+          type: string
+        description:
+          type: string
+        startingDate:
+          type: string
+          format: date-time
+        endingDate:
+          type: string
+          format: date-time
+        currency:
+          type: string
+          enum:
+          - RON
+          - EUR
+          - USD
+        status:
+          type: boolean
+      example:
+        endingDate: 2000-01-23T04:56:07.000+00:00
+        clientName: clientName
+        name: name
+        description: description
+        currency: RON
+        id: 0.80082819046101150206595775671303272247314453125
+        startingDate: 2000-01-23T04:56:07.000+00:00
+        status: true
+    Employee:
+      required:
+      - CNP
+      - city
+      - firstName
+      - id
+      - jobTitle
+      - lastName
+      - personalEmail
+      - phoneNumber
+      - workEmail
+      type: object
+      properties:
+        id:
+          type: number
+          format: int
+        userId:
+          type: number
+          format: int
+        firstName:
+          type: string
+        lastName:
+          type: string
+        CNP:
+          type: string
+        jobTitle:
+          type: string
+        city:
+          type: string
+        phoneNumber:
+          type: string
+        workEmail:
+          type: string
+          format: email
+        personalEmail:
+          type: string
+          format: email
+        employeeRateType:
+          type: string
+          enum:
+          - HOUR
+          - MONTH
+        employeeRateValue:
+          type: number
+          format: int
+        contractType:
+          type: string
+          default: PFA
+          enum:
+          - PFA
+          - SRL
+          - CIM
+        currency:
+          type: string
+          default: EUR
+          enum:
+          - EUR
+          - USD
+          - RON
+        vacationDays:
+          type: number
+          format: int
+        startingDate:
+          type: string
+          format: date-time
+        endingDate:
+          type: string
+          format: date-time
+        hasMedicalPackage:
+          type: boolean
+        status:
+          type: boolean
+      example:
+        lastName: lastName
+        CNP: CNP
+        city: city
+        workEmail: ""
+        contractType: PFA
+        jobTitle: jobTitle
+        userId: 6.02745618307040320615897144307382404804229736328125
+        hasMedicalPackage: true
+        employeeRateType: HOUR
+        personalEmail: ""
+        firstName: firstName
+        phoneNumber: phoneNumber
+        endingDate: 2000-01-23T04:56:07.000+00:00
+        vacationDays: 5.962133916683182377482808078639209270477294921875
+        currency: EUR
+        id: 0.80082819046101150206595775671303272247314453125
+        employeeRateValue: 1.46581298050294517310021547018550336360931396484375
+        startingDate: 2000-01-23T04:56:07.000+00:00
+        status: true
+    NewEmployee:
+      required:
+      - CNP
+      - city
+      - firstName
+      - id
+      - jobTitle
+      - lastName
+      - personalEmail
+      - phoneNumber
+      - workEmail
+      type: object
+      properties:
+        userId:
+          type: number
+          format: int
+        firstName:
+          type: string
+        lastName:
+          type: string
+        CNP:
+          type: string
+        jobTitle:
+          type: string
+        city:
+          type: string
+        phoneNumber:
+          type: string
+        workEmail:
+          type: string
+          format: email
+        personalEmail:
+          type: string
+          format: email
+        employeeRateType:
+          type: string
+          enum:
+          - HOUR
+          - MONTH
+        employeeRateValue:
+          type: number
+          format: int
+        contractType:
+          type: string
+          default: PFA
+          enum:
+          - PFA
+          - SRL
+          - CIM
+        currency:
+          type: string
+          default: EUR
+          enum:
+          - EUR
+          - USD
+          - RON
+        vacationDays:
+          type: number
+          format: int
+        startingDate:
+          type: string
+          format: date-time
+        endingDate:
+          type: string
+          format: date-time
+        hasMedicalPackage:
+          type: boolean
+        status:
+          type: boolean
+    NewAllocationForEmployee:
+      required:
+      - employeeId
+      - flatRate
+      - flateRateType
+      - hourlyRate
+      - hours
+      - startingDate
+      - type
+      type: object
+      properties:
+        projectId:
+          type: number
+          format: int
+        startingDate:
+          type: string
+          format: date-time
+        endingDate:
+          type: string
+          format: date-time
+        type:
+          type: string
+          enum:
+          - day
+          - month
+        hours:
+          type: number
+          format: int
+        hourlyRate:
+          type: number
+          format: int
+        flatRate:
+          type: number
+          format: int
+        flatRateType:
+          type: string
+          enum:
+          - day
+          - month
+    NewAllocationForProject:
+      required:
+      - employeeId
+      - flatRate
+      - flateRateType
+      - hourlyRate
+      - hours
+      - startingDate
+      - type
+      type: object
+      properties:
+        employeeId:
+          type: number
+          format: int
+        startingDate:
+          type: string
+          format: date-time
+        endingDate:
+          type: string
+          format: date-time
+        type:
+          type: string
+          enum:
+          - day
+          - month
+        hours:
+          type: number
+          format: int
+        hourlyRate:
+          type: number
+          format: int
+        flatRate:
+          type: number
+          format: int
+        flatRateType:
+          type: string
+          enum:
+          - day
+          - month
+    CreatedAllocation:
+      type: object
+      properties:
+        id:
+          type: number
+          format: int
+        projectId:
+          type: number
+          format: int
+        employeeId:
+          type: number
+          format: int
+        startingDate:
+          type: string
+          format: date-time
+        endingDate:
+          type: string
+          format: date-time
+        type:
+          type: string
+          enum:
+          - day
+          - month
+        hours:
+          type: number
+          format: int
+        hourlyRate:
+          type: number
+          format: int
+        flatRate:
+          type: number
+          format: int
+        flatRateType:
+          type: string
+          enum:
+          - day
+          - month
+      example:
+        flatRate: 2.3021358869347654518833223846741020679473876953125
+        hours: 5.962133916683182377482808078639209270477294921875
+        endingDate: 2000-01-23T04:56:07.000+00:00
+        employeeId: 1.46581298050294517310021547018550336360931396484375
+        id: 0.80082819046101150206595775671303272247314453125
+        type: day
+        hourlyRate: 5.63737665663332876420099637471139430999755859375
+        flatRateType: day
+        projectId: 6.02745618307040320615897144307382404804229736328125
+        startingDate: 2000-01-23T04:56:07.000+00:00
+    History:
+      type: object
+      properties:
+        event:
+          type: string
+        date:
+          type: string
+          format: date-time
+        details:
+          type: string
+      example:
+        date: 2000-01-23T04:56:07.000+00:00
+        details: details
+        event: event
+    EmployeeFeedback:
+      type: object
+      properties:
+        id:
+          type: number
+          format: int
+        name:
+          type: string
+        jobTitle:
+          type: string
+        overallRating:
+          type: number
+          format: float
+      example:
+        overallRating: 6.0274563
+        jobTitle: jobTitle
+        name: name
+        id: 0.80082819046101150206595775671303272247314453125
+    DetailedEmployeeFeedback:
+      type: object
+      properties:
+        id:
+          type: number
+          format: int
+        name:
+          type: string
+        overallRating:
+          type: number
+          format: float
+        teamAtmosphere:
+          type: number
+          format: float
+        workload:
+          type: number
+          format: float
+        clientCommunication:
+          type: number
+          format: float
+        myInvolvementInTheProject:
+          type: number
+          format: float
+        technicalResults:
+          type: number
+          format: float
+      example:
+        overallRating: 6.0274563
+        clientCommunication: 5.637377
+        name: name
+        myInvolvementInTheProject: 2.302136
+        workload: 5.962134
+        technicalResults: 7.0614014
+        id: 0.80082819046101150206595775671303272247314453125
+        teamAtmosphere: 1.4658129
+    MonthlyFeedback:
+      type: object
+      properties:
+        id:
+          type: number
+          format: int
+        month:
+          type: string
+        teamAtmosphere:
+          type: number
+          format: int
+        workload:
+          type: number
+          format: int
+        clientCommunication:
+          type: number
+          format: int
+        myInvolvementInTheProject:
+          type: number
+          format: int
+        technicalResults:
+          type: number
+          format: int
+        comments:
+          type: string
+      example:
+        clientCommunication: 5.962133916683182377482808078639209270477294921875
+        comments: comments
+        month: month
+        myInvolvementInTheProject: 5.63737665663332876420099637471139430999755859375
+        workload: 1.46581298050294517310021547018550336360931396484375
+        technicalResults: 2.3021358869347654518833223846741020679473876953125
+        id: 0.80082819046101150206595775671303272247314453125
+        teamAtmosphere: 6.02745618307040320615897144307382404804229736328125
+    Feedback:
+      type: object
+      properties:
+        id:
+          type: number
+          format: int
+        month:
+          type: string
+        employeeName:
+          type: string
+        submittedDate:
+          type: string
+          format: date
+        overallRating:
+          type: number
+          format: float
+        teamAtmosphere:
+          type: number
+          format: int
+        workload:
+          type: number
+          format: int
+        clientCommunication:
+          type: number
+          format: int
+        myInvolvementInTheProject:
+          type: number
+          format: int
+        technicalResults:
+          type: number
+          format: int
+        comments:
+          type: string
+      example:
+        employeeName: employeeName
+        overallRating: 6.0274563
+        clientCommunication: 5.63737665663332876420099637471139430999755859375
+        comments: comments
+        month: month
+        myInvolvementInTheProject: 2.3021358869347654518833223846741020679473876953125
+        workload: 5.962133916683182377482808078639209270477294921875
+        technicalResults: 7.061401241503109105224211816675961017608642578125
+        id: 0.80082819046101150206595775671303272247314453125
+        teamAtmosphere: 1.46581298050294517310021547018550336360931396484375
+        submittedDate: 2000-01-23
+    Error:
+      required:
+      - code
+      - message
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+      example:
+        code: code
+        message: message
+    UpdatedEmployeePassword:
+      required:
+      - newPassword
+      - oldPassword
+      - repeatNewPassword
+      type: object
+      properties:
+        newPassword:
+          type: string
+          format: password
+        oldPassword:
+          type: string
+          format: password
+        repeatNewPassword:
+          type: string
+          format: password
+    Settings:
+      type: object
+      properties:
+        id:
+          type: number
+          format: int
+        userId:
+          type: number
+          format: int
+        notifications:
+          $ref: '#/components/schemas/Settings_notifications'
+      example:
+        id: 0.80082819046101150206595775671303272247314453125
+        userId: 6.02745618307040320615897144307382404804229736328125
+        notifications:
+          upcomingEndingDates:
+            toggled: true
+            fiveDaysBefore: false
+            twoWeeksBefore: true
+            oneMonthBefore: false
+          completeProjectSheets: true
+          employeeSheetReminder: true
+          individualSheets: false
+    inline_response_200:
+      type: object
+      properties:
+        id:
+          type: number
+          format: int
+        status:
+          type: string
+          default: unsubmitted
+          enum:
+          - submitted
+          - unsubmitted
+      example:
+        id: 0.80082819046101150206595775671303272247314453125
+        status: unsubmitted
+    projects_projectId_body:
+      type: object
+      properties:
+        status:
+          type: boolean
+      example:
+        status: true
+    employees_employeeId_body:
+      type: object
+      properties:
+        status:
+          type: boolean
+      example:
+        status: true
+    Settings_notifications_upcomingEndingDates:
+      type: object
+      properties:
+        toggled:
+          type: boolean
+          default: true
+        fiveDaysBefore:
+          type: boolean
+          default: false
+        twoWeeksBefore:
+          type: boolean
+          default: true
+        oneMonthBefore:
+          type: boolean
+          default: false
+      example:
+        toggled: true
+        fiveDaysBefore: false
+        twoWeeksBefore: true
+        oneMonthBefore: false
+    Settings_notifications:
+      type: object
+      properties:
+        employeeSheetReminder:
+          type: boolean
+          default: true
+        completeProjectSheets:
+          type: boolean
+          default: true
+        individualSheets:
+          type: boolean
+          default: false
+        upcomingEndingDates:
+          $ref: '#/components/schemas/Settings_notifications_upcomingEndingDates'
+      example:
+        upcomingEndingDates:
+          toggled: true
+          fiveDaysBefore: false
+          twoWeeksBefore: true
+          oneMonthBefore: false
+        completeProjectSheets: true
+        employeeSheetReminder: true
+        individualSheets: false
+  responses:
+    NotFound:
+      description: The specified resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    MethodNotAllowed:
+      description: The specified method is not allowed for this resource
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NoContent:
+      description: The resource was deleted successfully
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: The specified resource has a conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ServerError:
+      description: Server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  securitySchemes:
+    devnest_auth:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: https://me.devnest.ro/oauth/auth
+          scopes:
+            read:timesheets: Read timesheets
+            read:projects: Read projects
+            write:projects: Update projects
+            read:employees: Read employees
+            write:employees: Update employees
+            read:allocations: Read allocations
+            write:allocations: Update allocations
+            read:history: Read history
+            write:history: Update history
+            read:feedback: Read feedback
+            write:feedback: Update feedback
+            read:settings: Read settings
+            write:settings: Write settings
