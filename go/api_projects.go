@@ -25,7 +25,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&project); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
 
@@ -50,8 +50,41 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetAllProjects(w http.ResponseWriter, r *http.Request) {
+	query := "SELECT id, name, clientName, description, startingDate, endingDate, currency, status FROM Projects"
+	rows, err := database.DB.Query(query)
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	// Create a slice to hold the projects
+	var projects []CreatedProject
+
+	// Iterate over the result rows and read project details
+	for rows.Next() {
+		var project CreatedProject
+		err = rows.Scan(&project.Id, &project.Name, &project.ClientName, &project.Description, &project.StartingDate, &project.EndingDate, &project.Currency, &project.Status)
+		if err != nil {
+			log.Printf("Error reading project details: %v", err)
+			http.Error(w, "Database error", http.StatusInternalServerError)
+			return
+		}
+		projects = append(projects, project)
+	}
+
+	// Serialize the array of projects to JSON and send it in the response
+	jsonResponse, err := json.Marshal(projects)
+	if err != nil {
+		log.Printf("Error encoding projects as JSON: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
+	w.Write(jsonResponse)
 }
 
 func GetHistoryForProject(w http.ResponseWriter, r *http.Request) {
@@ -60,14 +93,107 @@ func GetHistoryForProject(w http.ResponseWriter, r *http.Request) {
 }
 
 func ProjectsProjectIdDelete(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	projectId := vars["projectId"]
+
+	// Parse the project ID (assuming it's an integer, you may need to validate)
+	projectID, err := strconv.Atoi(projectId)
+	if err != nil {
+		http.Error(w, "Invalid project ID", http.StatusBadRequest)
+		return
+	}
+
+	// Check if the project exists in the database
+	query := "SELECT COUNT(*) FROM Projects WHERE id = @id"
+	var count int
+	err = database.DB.QueryRow(query, sql.Named("id", projectID)).Scan(&count)
+
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	if count == 0 {
+		http.Error(w, "Project not found", http.StatusNotFound)
+		return
+	}
+
+	// Delete the project by ID
+	query = "DELETE FROM Projects WHERE id = @id"
+	_, err = database.DB.Exec(query, sql.Named("id", projectID))
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 }
 
 func ProjectsProjectIdGet(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	projectId := vars["projectId"]
+
+	// Parse the project ID (assuming it's an integer, you may need to validate)
+	projectID, err := strconv.Atoi(projectId)
+	if err != nil {
+		http.Error(w, "Invalid project ID", http.StatusBadRequest)
+		return
+	}
+
+	// Check if the project exists in the database
+	query := "SELECT COUNT(*) FROM Projects WHERE id = @id"
+	var count int
+	err = database.DB.QueryRow(query, sql.Named("id", projectID)).Scan(&count)
+
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	if count == 0 {
+		http.Error(w, "Project not found", http.StatusNotFound)
+		return
+	}
+
+	// Retrieve the project details by ID
+	query = "SELECT id, name, clientName, description, startingDate, endingDate, currency, status FROM Projects WHERE id = @id"
+	rows, err := database.DB.Query(query, sql.Named("id", projectID))
+
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	// Create a struct to hold the project details
+	var project CreatedProject
+
+	// Assuming you expect only one row, you can use rows.Next() to read the result
+	if rows.Next() {
+		err = rows.Scan(&project.Id, &project.Name, &project.ClientName, &project.Description, &project.StartingDate, &project.EndingDate, &project.Currency, &project.Status)
+		if err != nil {
+			log.Printf("Error reading project details: %v", err)
+			http.Error(w, "Database error", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// Serialize the project details to JSON and send it in the response
+	jsonResponse, err := json.Marshal(project)
+	if err != nil {
+		log.Printf("Error encoding project as JSON: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
+	w.Write(jsonResponse)
 }
 
 func ProjectsProjectIdPatch(w http.ResponseWriter, r *http.Request) {
@@ -84,6 +210,22 @@ func ProjectsProjectIdPut(w http.ResponseWriter, r *http.Request) {
 	projectID, err := strconv.Atoi(projectId)
 	if err != nil {
 		http.Error(w, "Invalid project ID", http.StatusBadRequest)
+		return
+	}
+
+	// Check if the project exists in the database
+	query := "SELECT COUNT(*) FROM Projects WHERE id = @id"
+	var count int
+	err = database.DB.QueryRow(query, sql.Named("id", projectID)).Scan(&count)
+
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	if count == 0 {
+		http.Error(w, "Project not found", http.StatusNotFound)
 		return
 	}
 
