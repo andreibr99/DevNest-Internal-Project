@@ -10,10 +10,41 @@
 package swagger
 
 import (
+	"database/sql"
+	"encoding/json"
+	"github.com/andreibr99/DevNest-Internal-Project/database"
+	_ "github.com/denisenkom/go-mssqldb"
+	"github.com/gorilla/mux"
+	"log"
 	"net/http"
+	"strconv"
 )
 
 func CreateProject(w http.ResponseWriter, r *http.Request) {
+	var project NewProject
+
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&project); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	_, err := database.DB.Exec("INSERT INTO Projects (name, clientName, description, startingDate, endingDate, currency, status) VALUES (@name, @clientName, @description, @startingDate, @endingDate, @currency, @status)",
+		sql.Named("name", project.Name),
+		sql.Named("clientName", project.ClientName),
+		sql.Named("description", project.Description),
+		sql.Named("startingDate", project.StartingDate),
+		sql.Named("endingDate", project.EndingDate),
+		sql.Named("currency", project.Currency),
+		sql.Named("status", project.Status),
+	)
+
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 }
@@ -34,6 +65,7 @@ func ProjectsProjectIdDelete(w http.ResponseWriter, r *http.Request) {
 }
 
 func ProjectsProjectIdGet(w http.ResponseWriter, r *http.Request) {
+
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 }
@@ -44,6 +76,42 @@ func ProjectsProjectIdPatch(w http.ResponseWriter, r *http.Request) {
 }
 
 func ProjectsProjectIdPut(w http.ResponseWriter, r *http.Request) {
+	// Extract the projectId from the URL path
+	vars := mux.Vars(r)
+	projectId := vars["projectId"]
+
+	// Parse the project ID (assuming it's an integer, you may need to validate)
+	projectID, err := strconv.Atoi(projectId)
+	if err != nil {
+		http.Error(w, "Invalid project ID", http.StatusBadRequest)
+		return
+	}
+
+	var updatedProject CreatedProject
+
+	decoder := json.NewDecoder(r.Body)
+	if err = decoder.Decode(&updatedProject); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	_, err = database.DB.Exec("UPDATE Projects SET name = @name, clientName = @clientName, description = @description, startingDate = @startingDate, endingDate = @endingDate, currency = @currency, status = @status WHERE id = @id",
+		sql.Named("id", projectID),
+		sql.Named("name", updatedProject.Name),
+		sql.Named("clientName", updatedProject.ClientName),
+		sql.Named("description", updatedProject.Description),
+		sql.Named("startingDate", updatedProject.StartingDate),
+		sql.Named("endingDate", updatedProject.EndingDate),
+		sql.Named("currency", updatedProject.Currency),
+		sql.Named("status", updatedProject.Status),
+	)
+
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 }

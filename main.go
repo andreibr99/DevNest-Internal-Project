@@ -10,9 +10,10 @@
 package main
 
 import (
+	"github.com/andreibr99/DevNest-Internal-Project/database"
+	_ "github.com/denisenkom/go-mssqldb"
 	"log"
 	"net/http"
-
 	// WARNING!
 	// Change this to a fully-qualified import path
 	// once you place this file into your project.
@@ -20,10 +21,15 @@ import (
 	//
 	//    sw "github.com/myname/myrepo/go"
 	//
-	sw "./go"
+	sw "github.com/andreibr99/DevNest-Internal-Project/go"
 )
 
 func main() {
+
+	database.InitializeDB()
+
+	defer database.DB.Close()
+
 	log.Printf("Server started")
 
 	router := sw.NewRouter()
