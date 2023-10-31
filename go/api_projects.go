@@ -46,7 +46,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusCreated)
 }
 
 func GetAllProjects(w http.ResponseWriter, r *http.Request) {
@@ -74,7 +74,7 @@ func GetAllProjects(w http.ResponseWriter, r *http.Request) {
 		projects = append(projects, project)
 	}
 
-	// Serialize the array of projects to JSON and send it in the response
+	// Serialize the array of projects to JSON and send it in the responsse
 	jsonResponse, err := json.Marshal(projects)
 	if err != nil {
 		log.Printf("Error encoding projects as JSON: %v", err)
@@ -96,7 +96,7 @@ func ProjectsProjectIdDelete(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	projectId := vars["projectId"]
 
-	// Parse the project ID (assuming it's an integer, you may need to validate)
+	// Parse the project ID
 	projectID, err := strconv.Atoi(projectId)
 	if err != nil {
 		http.Error(w, "Invalid project ID", http.StatusBadRequest)
@@ -129,14 +129,14 @@ func ProjectsProjectIdDelete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func ProjectsProjectIdGet(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	projectId := vars["projectId"]
 
-	// Parse the project ID (assuming it's an integer, you may need to validate)
+	// Parse the project ID
 	projectID, err := strconv.Atoi(projectId)
 	if err != nil {
 		http.Error(w, "Invalid project ID", http.StatusBadRequest)
@@ -173,7 +173,6 @@ func ProjectsProjectIdGet(w http.ResponseWriter, r *http.Request) {
 	// Create a struct to hold the project details
 	var project CreatedProject
 
-	// Assuming you expect only one row, you can use rows.Next() to read the result
 	if rows.Next() {
 		err = rows.Scan(&project.Id, &project.Name, &project.ClientName, &project.Description, &project.StartingDate, &project.EndingDate, &project.Currency, &project.Status)
 		if err != nil {
@@ -183,7 +182,7 @@ func ProjectsProjectIdGet(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Serialize the project details to JSON and send it in the response
+	// Serialize the project details to JSON
 	jsonResponse, err := json.Marshal(project)
 	if err != nil {
 		log.Printf("Error encoding project as JSON: %v", err)
@@ -197,6 +196,50 @@ func ProjectsProjectIdGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func ProjectsProjectIdPatch(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	projectId := vars["projectId"]
+
+	// Parse the project ID
+	projectID, err := strconv.Atoi(projectId)
+	if err != nil {
+		http.Error(w, "Invalid project ID", http.StatusBadRequest)
+		return
+	}
+
+	// Check if the project exists in the database
+	query := "SELECT COUNT(*) FROM Projects WHERE id = @id"
+	var count int
+	err = database.DB.QueryRow(query, sql.Named("id", projectID)).Scan(&count)
+
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	if count == 0 {
+		http.Error(w, "Project not found", http.StatusNotFound)
+		return
+	}
+
+	// Parse the new status from the request body.
+	var updatedStatus CreatedProject
+
+	decoder := json.NewDecoder(r.Body)
+	if err = decoder.Decode(&updatedStatus); err != nil {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
+	// Update the project's status in the database for the specified project ID.
+	query = "UPDATE Projects SET status = @status WHERE id = @id"
+	_, err = database.DB.Exec(query, sql.Named("status", updatedStatus.Status), sql.Named("id", projectID))
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 }
@@ -206,7 +249,7 @@ func ProjectsProjectIdPut(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	projectId := vars["projectId"]
 
-	// Parse the project ID (assuming it's an integer, you may need to validate)
+	// Parse the project ID
 	projectID, err := strconv.Atoi(projectId)
 	if err != nil {
 		http.Error(w, "Invalid project ID", http.StatusBadRequest)
@@ -233,7 +276,7 @@ func ProjectsProjectIdPut(w http.ResponseWriter, r *http.Request) {
 
 	decoder := json.NewDecoder(r.Body)
 	if err = decoder.Decode(&updatedProject); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		http.Error(w, "Invalid request data", http.StatusBadRequest)
 		return
 	}
 
